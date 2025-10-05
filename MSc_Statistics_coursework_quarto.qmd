@@ -1,7 +1,7 @@
 ---
-title: "Coursework Template"
-subtitle: 'MSc in Statistics 2025/26, Imperial College London'
-author: "Josh Loo"
+title: "Palmer Penguins Analysis"
+subtitle: 'Reproducing the Palmer Penguins Analysis in the Coursework Template'
+author: "06055044"
 format:
   html:
     toc: true
@@ -37,8 +37,10 @@ require(rmarkdown)
 require(knitr)
 require(kableExtra)
 # Put any library imports and other preamble here.
+
 ```
 
+<!---
 This Rmarkdown document is intended to provide a basic template that you may use throughout the course, and to introduce you to basic functionality of the open-source bookdown R package for writing Rmarkdown documents [@xie2016bookdown].
 
 Please note:
@@ -48,8 +50,192 @@ Please note:
 - bookdown syntax to referencing literate and provide a bib file;
 - kable syntax to build clean and clear tables that can be referenced;
 - Rmarkdown inline functions to collect and print all code used.
+-->
 
-# Sampling from the Cauchy distribution
+# Question 1
+
+In this question we install the palmerpenguins package and load the dataset it contains.
+
+```{r}
+install.packages("palmerpenguins", repos = "https://cloud.r-project.org")
+library(palmerpenguins)
+```
+
+# Question 2
+
+In this question we add an additional column of Logical data called MissingData which indicates if there is any missing value for each row.
+
+```{r}
+penguins$MissingData <- apply(penguins, 1, anyNA)
+```
+
+The first part of the resulting data set is shown below in @tbl-palmer.
+
+```{r}
+#| label: tbl-palmer
+#| tbl-cap: "First part of the penguins data set with the added MissingData column."
+
+library(knitr)
+kable(head(penguins))
+```
+
+# Question 3
+
+In this question we find the average bill length and flipper length for each species of penguin.
+
+```{r}
+#| echo: false
+adelie_bills <- penguins$bill_length_mm[penguins$species == "Adelie"]
+chinstrap_bills <- penguins$bill_length_mm[penguins$species == "Chinstrap"]
+gentoo_bills <- penguins$bill_length_mm[penguins$species == "Gentoo"]
+
+adelie_bills_mean <- mean(adelie_bills, trim = 0, na.rm = TRUE)
+chinstrap_bills_mean <- mean(chinstrap_bills, trim = 0, na.rm = TRUE)
+gentoo_bills_mean <- mean(gentoo_bills, trim = 0, na.rm = TRUE)
+
+adelie_flippers <- penguins$flipper_length_mm[penguins$species == "Adelie"]
+chinstrap_flippers <- penguins$flipper_length_mm[penguins$species == "Chinstrap"]
+gentoo_flippers <- penguins$flipper_length_mm[penguins$species == "Gentoo"]
+
+adelie_flippers_mean <- mean(adelie_flippers, trim = 0, na.rm = TRUE)
+chinstrap_flippers_mean <- mean(chinstrap_flippers, trim = 0, na.rm = TRUE)
+gentoo_flippers_mean <- mean(gentoo_flippers, trim = 0, na.rm = TRUE)
+
+```
+
+For the Adelie species, the average bill length is `r adelie_bills_mean` and the average flipper length is `r adelie_flippers_mean`.
+
+For the Chinstrap species, the average bill length is `r chinstrap_bills_mean` and the average flipper length is `r chinstrap_flippers_mean`.
+
+For the Gentoo species, the average bill length is `r gentoo_bills_mean` and the average flipper length is `r gentoo_flippers_mean`.
+
+# Question 4
+
+In this question we Write a function species_mean() that calculates the mean of a numeric variable for each species and document it with Roxygen2-style comments.
+
+```{r}
+install.packages("roxygen2", repos = "https://cloud.r-project.org")
+
+#' Calculates the mean of a numeric variable for each species in the penguins data set
+#'
+#' @param varName A Character representing the variable name of the numeric column to calculate means for each species
+#'
+#' @returns A Data Frame containing a column for each unique species and a column for the mean of varName for the corresponding species
+#' @export
+#'
+#' @examples 
+species_mean <- function(varName) {
+  unique_species <- unique(penguins$species)
+  species_mean_df <- data.frame()
+  
+  for (species in unique_species) {
+    species_varName <- penguins[[varName]][penguins$species == species]
+    species_varName_mean <- mean(species_varName, trim = 0, na.rm = TRUE)
+    
+    new_row <- data.frame ("Species" = species, "Mean" = species_varName_mean)
+    species_mean_df <- rbind(species_mean_df, new_row)
+  }
+  
+  return(species_mean_df)
+}
+```
+
+# Question 5
+
+In this question, we generate a scatter plot of flipper length vs. body mass with different symbols and colours for each species. This is displayed below in @fig-sim-data
+
+```{r}
+#| label: fig-sim-data
+#| tbl-cap: "Scatter Plot of Flipper Length vs. Body Mass for Each Species."
+
+plot(x = penguins$flipper_length_mm,
+     y = penguins$body_mass_g,
+     col = penguins$species, 
+     pch = 15 + as.numeric(penguins$species),
+     main = "Flipper Length vs. Body Mass for Each Species",
+     xlab = "Flipper Length (mm)",
+     ylab = "Body Mass (g)"
+)
+
+legend(
+"bottomright",
+title = "Species",
+legend = c("Adelie", "Chinstrap", "Gentoo"),
+pch = 16:18,
+col = 1:3,
+bty = "n")
+```
+
+# Question 6
+
+In this question, we add points to the plot generated in Question 5 representing the mean values of Flipper Length and Body Mass for each species. The original plot from Question 5 is shown below in @fig-example-plots-1 and the plot with added mean values of Flipper Length and Body Mass for each species is shown in  @fig-example-plots-2
+
+```{r}
+#| layout-ncol: 2
+#| label: fig-example-plots
+#| fig-cap: "Scatter Plot of Flipper Length vs. Body Mass for Each Species."
+#| fig-subcap: 
+#|   - "Original Plot from Question 5"
+#|   - "Plot with Added Mean Values of Flipper Length and Body Mass for each species"
+
+plot(x = penguins$flipper_length_mm,
+     y = penguins$body_mass_g,
+     col = penguins$species, 
+     pch = 15 + as.numeric(penguins$species),
+     main = "Flipper Length vs. Body Mass for Each Species",
+     xlab = "Flipper Length (mm)",
+     ylab = "Body Mass (g)"
+)
+
+legend(
+"bottomright",
+title = "Species",
+legend = c("Adelie", "Chinstrap", "Gentoo"),
+pch = 16:18,
+col = 1:3,
+bty = "n")
+
+plot(x = penguins$flipper_length_mm,
+     y = penguins$body_mass_g,
+     col = penguins$species, 
+     pch = 15 + as.numeric(penguins$species),
+     main = "Flipper Length vs. Body Mass for Each Species",
+     xlab = "Flipper Length (mm)",
+     ylab = "Body Mass (g)"
+)
+
+legend(
+"bottomright",
+title = "Mean",
+legend = c("Adelie", "Chinstrap", "Gentoo"),
+pch = 16:18,
+col = c("purple", "orange", "yellow"),
+bty = "n")
+
+flippers_mean_df <- species_mean("flipper_length_mm")
+body_mass_mean_df <- species_mean("body_mass_g")
+
+points(x = flippers_mean_df[flippers_mean_df$Species == "Adelie", "Mean"], 
+       y = body_mass_mean_df[body_mass_mean_df$Species == "Adelie", "Mean"], 
+       col = "purple", 
+       pch = 16
+)
+
+points(x = flippers_mean_df[flippers_mean_df$Species == "Chinstrap", "Mean"], 
+       y = body_mass_mean_df[body_mass_mean_df$Species == "Chinstrap", "Mean"], 
+       col = "orange", 
+       pch = 17
+)
+
+
+points(x = flippers_mean_df[flippers_mean_df$Species == "Gentoo", "Mean"], 
+       y = body_mass_mean_df[body_mass_mean_df$Species == "Gentoo", "Mean"], 
+       col = "yellow", 
+       pch = 18
+)
+```
+
+Adding some reference to @testref.
 
 In this question we seek to generate samples from the standard Cauchy distribution, with pdf given by
 \begin{equation}
